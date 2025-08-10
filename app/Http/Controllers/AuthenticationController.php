@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -63,29 +64,24 @@ class AuthenticationController extends Controller
                 'email' => 'required|email',
                 'password' => 'required|string',
             ]);
-            $user = User::with(['role', 'student', 'admin'])->where('email', $validated['email'])->first();
+
+            $user = User::with(['role', 'student', 'admin'])
+                ->where('email', $validated['email'])
+                ->first();
+
             if (!$user || !Hash::check($validated['password'], $user->password)) {
                 throw ValidationException::withMessages([
                     'email' => ['The provided credentials are incorrect.'],
                 ]);
             }
+
             $token = $user->createToken('api-token')->plainTextToken;
-            $userData = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role->name,
-            ];
-            if ($user->role->name === 'student' && $user->student) {
-                $userData['student'] = $user->student;
-            } elseif ($user->role->name === 'admin' && $user->admin) {
-                $userData['admin'] = $user->admin;
-            }
 
             return response()->json([
                 'token' => $token,
-                'user' => $userData,
+                'user' => new UserResource($user),
             ]);
+
         } catch (ValidationException $ve) {
             return response()->json(['errors' => $ve->errors()], 422);
         } catch (Exception $e) {
