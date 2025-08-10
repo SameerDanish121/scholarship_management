@@ -1,6 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Http\Resources\AllocationResource;
+use App\Http\Resources\ApplicationResource;
+use App\Http\Resources\AwardResource;
+use App\Http\Resources\DisbursementResource;
+use App\Http\Resources\ReviewLogResource;
+use App\Http\Resources\ScholarshipResource;
 use App\Models\{
     Scholarship,
     Application,
@@ -20,7 +26,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class StudentController extends Controller
 {
-
     public function listScholarships(Request $request)
     {
         try {
@@ -30,7 +35,10 @@ class StudentController extends Controller
                 ->orderBy('application_deadline', 'asc')
                 ->get();
 
-            return response()->json(['success' => true, 'data' => $scholarships]);
+            return response()->json([
+                'success' => true,
+                'data' => ScholarshipResource::collection($scholarships)
+            ]);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -39,7 +47,6 @@ class StudentController extends Controller
             ], 500);
         }
     }
-
     public function applyToScholarship(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -54,7 +61,7 @@ class StudentController extends Controller
         $scholarshipId = $request->input('scholarship_id');
 
         try {
-           
+
             $sch = Scholarship::findOrFail($scholarshipId);
             if ($sch->status !== 'active' || $sch->application_deadline < now()->toDateString()) {
                 return response()->json(['success' => false, 'message' => 'Scholarship is not open for applications'], 409);
@@ -134,7 +141,7 @@ class StudentController extends Controller
                 $uploaded[] = [
                     'id' => $doc->id,
                     'filename' => $doc->filename,
-                    'url' =>asset(Storage::url($doc->file_path)),
+                    'url' => asset(Storage::url($doc->file_path)),
                     'status' => 'uploaded'
                 ];
             }
@@ -161,15 +168,19 @@ class StudentController extends Controller
                 'award.allocations.costCategory',
                 'award.allocations.disbursements.receipts'
             ])->where('student_id', $studentId)
-              ->orderBy('created_at', 'desc')
-              ->get();
-            $data = $applications->map(function ($app) {
-                return $this->mapApplicationFull($app);
-            });
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-            return response()->json(['success' => true, 'data' => $data]);
+            return response()->json([
+                'success' => true,
+                'data' => ApplicationResource::collection($applications)
+            ]);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch applications', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch applications',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     public function viewApplication(Request $request, $id)
@@ -184,16 +195,24 @@ class StudentController extends Controller
                 'award.allocations.costCategory',
                 'award.allocations.disbursements.receipts'
             ])->where('id', $id)
-              ->where('student_id', $studentId)
-              ->firstOrFail();
+                ->where('student_id', $studentId)
+                ->firstOrFail();
 
-            return response()->json(['success' => true, 'data' => $this->mapApplicationFull($application)]);
+            return response()->json([
+                'success' => true,
+                'data' => new ApplicationResource($application)
+            ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Application not found or not owned by you'], 404);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch application', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch application',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
     public function viewReviewLogs(Request $request, $id)
     {
         $studentId = $request->user()->id;
@@ -205,20 +224,18 @@ class StudentController extends Controller
 
             $logs = $application->reviewLogs()->with('admin')->orderBy('created_at', 'desc')->get();
 
-            $result = $logs->map(function ($log) {
-                return [
-                    'id' => $log->id,
-                    'action' => $log->action,
-                    'admin' => $log->admin ? ['id' => $log->admin->id, 'name' => $log->admin->name] : null,
-                    'created_at' => $log->created_at
-                ];
-            });
-
-            return response()->json(['success' => true, 'data' => $result]);
+            return response()->json([
+                'success' => true,
+                'data' => ReviewLogResource::collection($logs)
+            ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Application not found or not owned by you'], 404);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch review logs', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch review logs',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     public function myAwards(Request $request)
@@ -234,51 +251,19 @@ class StudentController extends Controller
                 $q->where('student_id', $studentId);
             })->get();
 
-            $data = $awards->map(function ($award) {
-                return [
-                    'id' => $award->id,
-                    'application_id' => $award->application_id,
-                    'award_amount' => $award->award_amount,
-                    'award_date' => $award->award_date,
-                    'scholarship' => $award->application ? [
-                        'id' => $award->application->scholarship->id,
-                        'name' => $award->application->scholarship->name
-                    ] : null,
-                    'allocations' => $award->allocations->map(function ($alloc) {
-                        return [
-                            'id' => $alloc->id,
-                            'cost_category' => [
-                                'id' => $alloc->costCategory->id,
-                                'name' => $alloc->costCategory->name,
-                            ],
-                            'allocated_amount' => $alloc->allocated_amount,
-                            'disbursements' => $alloc->disbursements->map(function ($d) {
-                                return [
-                                    'id' => $d->id,
-                                    'amount' => $d->amount,
-                                    'disbursement_date' => $d->disbursement_date,
-                                    'reference_number' => $d->reference_number,
-                                    'receipts' => $d->receipts->map(function ($r) {
-                                        return [
-                                            'id' => $r->id,
-                                            'filename' => $r->filename,
-                                            'url' =>asset(Storage::url($r->file_path)),
-                                            'amount' => $r->amount,
-                                            'uploaded_at' => $r->uploaded_at
-                                        ];
-                                    })
-                                ];
-                            })
-                        ];
-                    })
-                ];
-            });
-
-            return response()->json(['success' => true, 'data' => $data]);
+            return response()->json([
+                'success' => true,
+                'data' => AwardResource::collection($awards)
+            ]);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch awards', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch awards',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
     public function viewDisbursements(Request $request, $awardId)
     {
         try {
@@ -290,34 +275,18 @@ class StudentController extends Controller
                     $q->where('student_id', $studentId);
                 })->firstOrFail();
 
-            $result = $award->allocations->map(function ($alloc) {
-                return [
-                    'allocation_id' => $alloc->id,
-                    'cost_category' => $alloc->costCategory ? ['id' => $alloc->costCategory->id, 'name' => $alloc->costCategory->name] : null,
-                    'allocated_amount' => $alloc->allocated_amount,
-                    'disbursements' => $alloc->disbursements->map(function ($d) {
-                        return [
-                            'id' => $d->id,
-                            'amount' => $d->amount,
-                            'date' => $d->disbursement_date,
-                            'reference_number' => $d->reference_number,
-                            'receipts' => $d->receipts->map(fn($r) => [
-                                'id' => $r->id,
-                                'filename' => $r->filename,
-                                'url' => Storage::url($r->file_path),
-                                'amount' => $r->amount,
-                                'uploaded_at' => $r->uploaded_at
-                            ])
-                        ];
-                    })
-                ];
-            });
-
-            return response()->json(['success' => true, 'data' => $result]);
+            return response()->json([
+                'success' => true,
+                'data' => AllocationResource::collection($award->allocations)
+            ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Award not found or not owned by you'], 404);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch disbursements', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch disbursements',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     public function uploadReceipt(Request $request, $id)
@@ -372,7 +341,7 @@ class StudentController extends Controller
                 'data' => [
                     'id' => $receipt->id,
                     'filename' => $receipt->filename,
-                    'url' =>asset(Storage::url($receipt->file_path)),
+                    'url' => asset(Storage::url($receipt->file_path)),
                     'amount' => $receipt->amount
                 ]
             ], 201);
@@ -394,91 +363,18 @@ class StudentController extends Controller
                     $q->where('student_id', $studentId);
                 })->firstOrFail();
 
-            $data = [
-                'id' => $disb->id,
-                'amount' => $disb->amount,
-                'date' => $disb->disbursement_date,
-                'reference_number' => $disb->reference_number,
-                'allocation' => [
-                    'id' => $disb->allocation->id,
-                    'cost_category' => $disb->allocation->costCategory ? ['id' => $disb->allocation->costCategory->id, 'name' => $disb->allocation->costCategory->name] : null,
-                ],
-                'receipts' => $disb->receipts->map(function ($r) {
-                    return [
-                        'id' => $r->id,
-                        'filename' => $r->filename,
-                        'url' =>asset(Storage::url($r->file_path)),
-                        'amount' => $r->amount,
-                        'uploaded_at' => $r->uploaded_at
-                    ];
-                })
-            ];
-
-            return response()->json(['success' => true, 'data' => $data]);
+            return response()->json([
+                'success' => true,
+                'data' => new DisbursementResource($disb)
+            ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Disbursement not found or not owned by you'], 404);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch disbursement', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch disbursement',
+                'error' => $e->getMessage()
+            ], 500);
         }
-    }
-    private function mapApplicationFull(Application $app)
-    {
-        return [
-            'id' => $app->id,
-            'status' => $app->status,
-            'submitted_at' => $app->submitted_at,
-            'created_at' => $app->created_at,
-            'scholarship' => $app->scholarship ? [
-                'id' => $app->scholarship->id,
-                'name' => $app->scholarship->name,
-                'description' => $app->scholarship->description,
-                'application_deadline' => $app->scholarship->application_deadline
-            ] : null,
-            'documents' => $app->documents->map(function ($d) {
-                return [
-                    'id' => $d->id,
-                    'filename' => $d->filename,
-                    'url' =>asset(Storage::url($d->file_path)),
-                    'uploaded_at' => $d->uploaded_at
-                ];
-            }),
-            'review_logs' => $app->reviewLogs->map(function ($log) {
-                return [
-                    'id' => $log->id,
-                    'action' => $log->action,
-                    'admin' => $log->admin ? ['id' => $log->admin->id, 'name' => $log->admin->name] : null,
-                    'created_at' => $log->created_at
-                ];
-            }),
-            'award' => $app->award ? [
-                'id' => $app->award->id,
-                'award_amount' => $app->award->award_amount,
-                'award_date' => $app->award->award_date,
-                'allocations' => $app->award->allocations->map(function ($alloc) {
-                    return [
-                        'id' => $alloc->id,
-                        'cost_category' => $alloc->costCategory ? ['id' => $alloc->costCategory->id, 'name' => $alloc->costCategory->name] : null,
-                        'allocated_amount' => $alloc->allocated_amount,
-                        'disbursements' => $alloc->disbursements->map(function ($d) {
-                            return [
-                                'id' => $d->id,
-                                'amount' => $d->amount,
-                                'date' => $d->disbursement_date,
-                                'reference_number' => $d->reference_number,
-                                'receipts' => $d->receipts->map(function ($r) {
-                                    return [
-                                        'id' => $r->id,
-                                        'filename' => $r->filename,
-                                        'url' => asset(Storage::url($r->file_path)),
-                                        'amount' => $r->amount,
-                                        'uploaded_at' => $r->uploaded_at
-                                    ];
-                                })
-                            ];
-                        })
-                    ];
-                })
-            ] : null
-        ];
     }
 }
