@@ -14,6 +14,8 @@ Intial Command
 
 ALSO FOR BETTER VALIDATION AND VALIDATION FAILED VISIBILITY USE ALSO THE KEY IN HEADER AS ( Accept : application/json )
 
+TAKE CARE OF THING THAT YOU MUST HAVE ADMIN (TOKEN) TO USE THE ENDPOINTS OF ADMIN AND SAME FOR STUDENT
+
 https://sameerdanish12345-607795.postman.co/workspace/sameerdanish12345's-Workspace~db7ffdff-0c45-426b-871d-05957f2b02a7/collection/47469162-b60cda85-b712-4b33-b724-733ec2f56d5e?
 
 I was  uable to do my worksapce public so I make the link accessible to any guest , but also added the email ( shamik@theloopcraft.com ) as Editor , if you face some kind of issue you can ask me and provide me with a email to add as editor also . 
