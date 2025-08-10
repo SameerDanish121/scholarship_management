@@ -19,9 +19,11 @@ https://sameerdanish12345-607795.postman.co/workspace/sameerdanish12345's-Worksp
 I was  uable to do my worksapce public so I make the link accessible to any guest , but also added the email ( shamik@theloopcraft.com ) as Editor , if you face some kind of issue you can ask me and provide me with a email to add as editor also . 
 
 
+# GITHUB REPO
 
+https://github.com/SameerDanish121/scholarship_management
 
-# aCTUAL IMPLEMENTATION
+# ACTUAL IMPLEMENTATION
 
 I tried my best to implmenet the things as asked , but there can be  little difference between the requirments and actual requirments , the things that i,m not fimilar of i tried to learn within the given time limit . 
 
