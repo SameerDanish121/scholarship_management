@@ -24,7 +24,7 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
     
     Route::get('/my-awards', [StudentController::class, 'myAwards']);
     Route::get('/awards/{awardId}/disbursements', [StudentController::class, 'viewDisbursements']);
-    
+
     Route::post('/disbursements/{id}/receipts', [StudentController::class, 'uploadReceipt']);
     Route::get('/disbursements/{id}', [StudentController::class, 'viewDisbursement']);
 });
@@ -46,11 +46,13 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
 
     Route::post('/applications/{id}/aw                              ard', [AdminController::class, 'createAward']);
     Route::post('/awards/{awardId}/schedules', [AdminController::class, 'createDisbursementSchedules']);
-    Route::post('/disbursements/{id}/pay', [AdminController::class, 'payDisbursement']);
-    Route::get('/disbursements', [AdminController::class, 'filterDisbursements']);
 
+    Route::get('/disbursements', [AdminController::class, 'filterDisbursements']);
     Route::post('/receipts/{id}/verify', [AdminController::class, 'verifyReceipt']);
     Route::get('/reports/scholarships/{id}', [AdminController::class, 'scholarshipReport']);
     Route::get('/reports/awards/{awardId}', [AdminController::class, 'awardReport']);
+
+     // 5 REQUEST WILL BE ALLOWED TO THIS SPECIFIC ROUTE
+    Route::middleware('throttle:5,1')->post('/disbursements/{id}/pay', [AdminController::class, 'payDisbursement']);
 });
 

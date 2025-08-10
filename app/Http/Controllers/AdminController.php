@@ -13,6 +13,7 @@ use App\Models\Disbursement;
 use App\Models\Receipt;
 use App\Models\ReviewLog;
 use App\Models\ScholarshipBudget;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -51,7 +52,7 @@ class AdminController extends Controller
                 'data' => $this->mapScholarship($scholarship),
             ], 201);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create scholarship: ' . $e->getMessage(),
@@ -97,7 +98,7 @@ class AdminController extends Controller
                 'data' => $this->mapScholarship($scholarship->fresh()),
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update scholarship: ' . $e->getMessage(),
@@ -121,7 +122,7 @@ class AdminController extends Controller
                 'success' => true,
                 'message' => 'Scholarship deleted successfully',
             ]);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete scholarship: ' . $e->getMessage(),
@@ -154,7 +155,7 @@ class AdminController extends Controller
                 'data' => $category,
             ], 201);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create cost category: ' . $e->getMessage(),
@@ -171,7 +172,7 @@ class AdminController extends Controller
                 'data' => $categories,
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve cost categories: ' . $e->getMessage(),
@@ -279,7 +280,7 @@ class AdminController extends Controller
                 }),
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to set budgets: ' . $e->getMessage(),
@@ -319,7 +320,7 @@ class AdminController extends Controller
                 }),
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve budgets: ' . $e->getMessage(),
@@ -531,7 +532,7 @@ class AdminController extends Controller
                 'success' => true,
                 'message' => "Application has been {$validated['action']}.",
             ]);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             return response()->json([
@@ -598,7 +599,7 @@ class AdminController extends Controller
                 'data' => $award->load('allocations.costCategory'),
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
@@ -660,7 +661,7 @@ class AdminController extends Controller
                 'message' => 'Disbursement schedules created successfully',
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
@@ -714,7 +715,7 @@ class AdminController extends Controller
                 'data' => $disbursement,
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
@@ -770,7 +771,7 @@ class AdminController extends Controller
                 'data' => $receipt,
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to verify receipt: ' . $e->getMessage(),
@@ -805,7 +806,7 @@ class AdminController extends Controller
                 'data' => $report,
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch scholarship report: ' . $e->getMessage(),
@@ -850,7 +851,7 @@ class AdminController extends Controller
                 'data' => $report,
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch award report: ' . $e->getMessage(),

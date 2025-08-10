@@ -11,6 +11,7 @@ use App\Models\{
     Disbursement,
     Receipt
 };
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +31,7 @@ class StudentController extends Controller
                 ->get();
 
             return response()->json(['success' => true, 'data' => $scholarships]);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch scholarships',
@@ -80,7 +81,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'message' => 'Application submitted', 'data' => $application], 201);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Scholarship not found'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed to submit application', 'error' => $e->getMessage()], 500);
         }
@@ -143,7 +144,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'message' => 'Documents processed', 'data' => $uploaded], 201);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Application not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed to upload documents', 'error' => $e->getMessage()], 500);
         }
@@ -167,7 +168,7 @@ class StudentController extends Controller
             });
 
             return response()->json(['success' => true, 'data' => $data]);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch applications', 'error' => $e->getMessage()], 500);
         }
     }
@@ -189,7 +190,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'data' => $this->mapApplicationFull($application)]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Application not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch application', 'error' => $e->getMessage()], 500);
         }
     }
@@ -216,7 +217,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'data' => $result]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Application not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch review logs', 'error' => $e->getMessage()], 500);
         }
     }
@@ -274,7 +275,7 @@ class StudentController extends Controller
             });
 
             return response()->json(['success' => true, 'data' => $data]);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch awards', 'error' => $e->getMessage()], 500);
         }
     }
@@ -315,7 +316,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'data' => $result]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Award not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch disbursements', 'error' => $e->getMessage()], 500);
         }
     }
@@ -377,7 +378,7 @@ class StudentController extends Controller
             ], 201);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Disbursement not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed to upload receipt', 'error' => $e->getMessage()], 500);
         }
@@ -416,7 +417,7 @@ class StudentController extends Controller
             return response()->json(['success' => true, 'data' => $data]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Disbursement not found or not owned by you'], 404);
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to fetch disbursement', 'error' => $e->getMessage()], 500);
         }
     }
